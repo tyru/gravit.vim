@@ -61,6 +61,12 @@ function! s:gravit_run()
         let c = s:getchar()
         if c ==# "\<Esc>"
             break
+        elseif c ==# "\<Tab>"
+            let match_index =
+            \   (match_index + 1)
+            \   % len(s:match_as_possible(
+            \       join(s:get_visible_lines(), "\n"),
+            \       search_buf))
         elseif c ==# "\<Return>"
             " Jump to the position.
             let pos = s:search_pos(search_buf, match_index)
@@ -106,8 +112,6 @@ endfunction
 function! s:search_pos(search_buf, skip_num)
     let skip_num = a:skip_num
     " Get lnums of matched lines.
-    " FIXME: Get `visible` lines.
-    " Don't get lines in foldings
     for lnum in filter(
     \   range(line('w0'), line('w$')),
     \   'getline(v:val) =~# a:search_buf'
@@ -124,6 +128,35 @@ function! s:search_pos(search_buf, skip_num)
         endif
     endfor
     return []
+endfunction
+
+function! s:match_as_possible(expr, pat)
+    let result = []
+    let start = 0
+    while start isnot -1
+        let start = match(a:expr, a:pat, start is 0 ? 0 : start + 1)
+        if start is -1
+            break
+        endif
+        call add(result, start)
+    endwhile
+    return result
+endfunction
+
+function! s:get_visible_lines()
+    let lnum = line('w0')
+    let lines = []
+    while lnum <=# line('w$')
+        if foldclosed(lnum) isnot -1
+            " Folding is closed.
+            call add(lines, foldtextresult(lnum))
+            let lnum  = foldclosedend(lnum) + 1
+        else
+            call add(lines, getline(lnum))
+            let lnum += 1
+        endif
+    endwhile
+    return lines
 endfunction
 
 function! s:match_with_len(...)
