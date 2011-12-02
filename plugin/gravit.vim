@@ -48,45 +48,49 @@ function! s:gravit_run()
     let old_search_buf = ''
     let hl_manager = s:HighlightManager_new()
     let match_index = 0
-    while 1
-        " Echo prompt.
-        redraw
-        echo "\r" . g:ravit_prompt . search_buf
+    try
+        while 1
+            " Echo prompt.
+            redraw
+            echo "\r" . g:ravit_prompt . search_buf
 
-        " Handle input char.
-        let old_search_buf = search_buf
-        let c = s:getchar()
-        if c ==# "\<Esc>"
-            break
-        elseif c ==# "\<Tab>"
-            let match_index =
-            \   (match_index + 1)
-            \   % len(s:match_as_possible(
-            \       join(s:get_visible_lnums(), "\n"),
-            \       search_buf))
-        elseif c ==# "\<Return>"
-            " Jump to the position.
-            let pos = s:search_pos(search_buf, match_index)
-            if !empty(pos)
-                call cursor(pos[0], pos[1])
+            " Handle input char.
+            let old_search_buf = search_buf
+            let c = s:getchar()
+            if c ==# "\<Esc>"
+                break
+            elseif c ==# "\<Tab>"
+                let match_index =
+                \   (match_index + 1)
+                \   % len(s:match_as_possible(
+                \       join(s:get_visible_lnums(), "\n"),
+                \       search_buf))
+            elseif c ==# "\<Return>"
+                " Jump to the position.
+                let pos = s:search_pos(search_buf, match_index)
+                if !empty(pos)
+                    call cursor(pos[0], pos[1])
+                else
+                    redraw
+                    echohl WarningMsg
+                    echomsg 'No match: '.search_buf
+                    echohl None
+                endif
+                break
+            elseif c ==# "\<BS>" || c ==# "\<C-h>"
+                let search_buf = search_buf[:-2]
             else
-                redraw
-                echohl WarningMsg
-                echomsg 'No match: '.search_buf
-                echohl None
+                let search_buf .= c
             endif
-            break
-        elseif c ==# "\<BS>" || c ==# "\<C-h>"
-            let search_buf = search_buf[:-2]
-        else
-            let search_buf .= c
-        endif
 
-        " Update highlight.
-        if search_buf !=# old_search_buf
-            call hl_manager.update(search_buf, match_index)
-        endif
-    endwhile
+            " Update highlight.
+            if search_buf !=# old_search_buf
+                call hl_manager.update(search_buf, match_index)
+            endif
+        endwhile
+    finally
+        call hl_manager.unregister()
+    endtry
 endfunction
 
 " HighlightManager {{{
