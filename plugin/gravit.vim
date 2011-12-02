@@ -43,32 +43,34 @@ nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
 function! s:gravit_run()
     call s:setup_highlight()
     let search_buf = ''
-    let match_id = -1
+    let ids = {'search': -1, 'current_match': -1}
+    let match_index = 0
     while 1
         " Echo prompt.
         redraw
         echo "\r⚡ " . search_buf
         " Remove previous highlight.
-        if match_id >=# 0
-            call matchdelete(match_id)
-            let match_id = -1
-        endif
+        for _ in keys(ids)
+            if ids[_] >=# 0
+                call matchdelete(ids[_])
+                let ids[_] = -1
+            endif
+        endfor
+
         " Handle input char.
         let c = s:getchar()
         if c ==# "\<Esc>"
             break
         elseif c ==# "\<Return>"
-            " TODO: Jump to the position.
-            let idx = match(getline('w0', 'w$'), search_buf)
-            if idx >=# 0
+            " Jump to the position.
+            let pos = s:search_pos(search_buf)
+            if !empty(pos)
+                call cursor(pos[0], pos[1])
             else
                 redraw
                 echohl WarningMsg
                 echomsg 'No match: '.search_buf
                 echohl None
-                " Fallback to '/' command.
-                " call feedkeys("\<C-\>\<C-g>/".search_buf, 'n')
-                " break
             endif
             break
         elseif c ==# "\<BS>" || c ==# "\<C-h>"
@@ -77,7 +79,21 @@ function! s:gravit_run()
             let search_buf .= c
         endif
         " Add highlight.
-        let match_id = matchadd('GraVitSearch', search_buf)
+        let pos = s:search_pos(search_buf)
+        if !empty(pos)
+            let ids.search
+            \   = matchadd('GraVitSearch', search_buf)
+            " FIXME: `len(search_buf)` is not applicable
+            " because `search_buf` may match the words
+            " of different length.
+            let ids.current_match
+            \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', len(search_buf)))
+        else
+            redraw
+            echohl WarningMsg
+            echomsg 'No match: '.search_buf
+            echohl None
+        endif
     endwhile
 endfunction
 
@@ -88,6 +104,18 @@ function! s:setup_highlight()
     if !hlexists('GraVitCurrentMatch')
         highlight GraVitCurrentMatch term=underline cterm=underline gui=underline ctermfg=4 guifg=Red
     endif
+endfunction
+
+function! s:search_pos(search_buf)
+    " FIXME: Get `visible` lines.
+    " Don't get lines in foldings
+    let lnum_offset = match(getline('w0', 'w$'), a:search_buf)
+    if lnum_offset is -1
+        return []
+    endif
+    let lnum = line('w0') + lnum_offset
+    let col  = match(getline(lnum), a:search_buf) + 1
+    return [lnum, col]
 endfunction
 
 function! s:getchar()
