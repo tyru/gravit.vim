@@ -63,7 +63,7 @@ function! s:gravit_run()
             break
         elseif c ==# "\<Return>"
             " Jump to the position.
-            let pos = s:search_pos(search_buf)
+            let pos = s:search_pos(search_buf, match_index)
             if !empty(pos)
                 call cursor(pos[0], pos[1])
             else
@@ -79,7 +79,7 @@ function! s:gravit_run()
             let search_buf .= c
         endif
         " Add highlight.
-        let pos = s:search_pos(search_buf)
+        let pos = s:search_pos(search_buf, match_index)
         if !empty(pos)
             let ids.search
             \   = matchadd('GraVitSearch', search_buf)
@@ -106,16 +106,27 @@ function! s:setup_highlight()
     endif
 endfunction
 
-function! s:search_pos(search_buf)
+function! s:search_pos(search_buf, skip_num)
+    let skip_num = a:skip_num
+    " Get lnums of matched lines.
     " FIXME: Get `visible` lines.
     " Don't get lines in foldings
-    let lnum_offset = match(getline('w0', 'w$'), a:search_buf)
-    if lnum_offset is -1
-        return []
-    endif
-    let lnum = line('w0') + lnum_offset
-    let col  = match(getline(lnum), a:search_buf) + 1
-    return [lnum, col]
+    for lnum in filter(
+    \   range(line('w0'), line('w$')),
+    \   'getline(v:val) =~# a:search_buf'
+    \)
+        " Get the col at where a:search_buf matched.
+        let idx = 0
+        let idx = match(getline(lnum), a:search_buf, idx)
+        while skip_num isnot 0 && idx isnot -1
+            let idx = match(getline(lnum), a:search_buf, idx + 1)
+            let skip_num -= 1
+        endwhile
+        if skip_num is 0
+            return [lnum, idx + 1]
+        endif
+    endfor
+    return []
 endfunction
 
 function! s:getchar()
