@@ -46,7 +46,7 @@ function! s:gravit_run()
     call s:setup_highlight()
     let search_buf = ''
     let old_search_buf = ''
-    let ids = {'search': -1, 'current_match': -1}
+    let hl_manager = s:HighlightManager_new()
     let match_index = 0
     while 1
         " Echo prompt.
@@ -84,29 +84,55 @@ function! s:gravit_run()
 
         " Update highlight.
         if search_buf !=# old_search_buf
-            " Remove previous highlight.
-            for _ in keys(ids)
-                if ids[_] >=# 0
-                    call matchdelete(ids[_])
-                    let ids[_] = -1
-                endif
-            endfor
-            " Add highlight.
-            let pos = s:search_pos(search_buf, match_index)
-            if !empty(pos)
-                let ids.search
-                \   = matchadd('GraVitSearch', search_buf)
-                let ids.current_match
-                \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
-            else
-                redraw
-                echohl WarningMsg
-                echomsg 'No match: '.search_buf
-                echohl None
-            endif
+            call hl_manager.update(search_buf, match_index)
         endif
     endwhile
 endfunction
+
+" HighlightManager {{{
+
+function! s:HighlightManager_new()
+    return {
+    \   '__ids': {'search': -1, 'current_match': -1},
+    \   'update': function('s:HighlightManager_update'),
+    \   'unregister': function('s:HighlightManager_unregister'),
+    \   'register': function('s:HighlightManager_register'),
+    \}
+endfunction
+
+function! s:HighlightManager_update(search_buf, match_index) dict
+    call self.unregister()
+    call self.register(a:search_buf, a:match_index)
+endfunction
+
+function! s:HighlightManager_unregister() dict
+    " Remove previous highlight.
+    let ids = self.__ids
+    for _ in keys(ids)
+        if ids[_] >=# 0
+            call matchdelete(ids[_])
+            let ids[_] = -1
+        endif
+    endfor
+endfunction
+
+function! s:HighlightManager_register(search_buf, match_index) dict
+    " Add highlight.
+    let pos = s:search_pos(a:search_buf, a:match_index)
+    if !empty(pos)
+        let self.__ids.search
+        \   = matchadd('GraVitSearch', a:search_buf)
+        let self.__ids.current_match
+        \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
+    else
+        redraw
+        echohl WarningMsg
+        echomsg 'No match: '.a:search_buf
+        echohl None
+    endif
+endfunction
+
+" }}}
 
 function! s:setup_highlight()
     if !hlexists('GraVitSearch')
