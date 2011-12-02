@@ -23,6 +23,7 @@ function! gravit#run(mode)
 
             " Handle input char.
             let c = s:getchar()
+            " TODO: Make keys configurable.
             if c ==# "\<Esc>"
                 return
             elseif c ==# "\<Tab>"
