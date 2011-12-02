@@ -8,7 +8,7 @@ scriptencoding utf-8
 " Name: 
 " Version: 0.0.0
 " Author:  tyru <tyru.exe@gmail.com>
-" Last Change: 2011-12-02.
+" Last Change: 2011-12-03.
 " License: Distributable under the same terms as Vim itself (see :help license)
 "
 " Description:
@@ -78,7 +78,7 @@ function! s:gravit_run()
 
             " Update highlight.
             if buffer.has_changed()
-                call hl_manager.update(buffer.get_buffer(), buffer.get_index())
+                call hl_manager.update(buffer)
             endif
             call buffer.commit()
 
@@ -99,9 +99,9 @@ function! s:HighlightManager_new()
     \}
 endfunction
 
-function! s:HighlightManager_update(search_buf, match_index) dict
+function! s:HighlightManager_update(search_buf) dict
     call self.unregister()
-    call self.register(a:search_buf, a:match_index)
+    call self.register(a:search_buf)
 endfunction
 
 function! s:HighlightManager_unregister() dict
@@ -115,20 +115,16 @@ function! s:HighlightManager_unregister() dict
     endfor
 endfunction
 
-function! s:HighlightManager_register(search_buf, match_index) dict
-    " Add highlight.
-    let pos = s:search_pos(a:search_buf, a:match_index)
-    if !empty(pos)
-        let self.__ids.search
-        \   = matchadd('GraVitSearch', a:search_buf)
-        let self.__ids.current_match
-        \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
-    else
-        redraw
-        echohl WarningMsg
-        echomsg 'No match: '.a:search_buf
-        echohl None
+function! s:HighlightManager_register(search_buf) dict
+    let pos = a:search_buf.search()
+    if empty(pos)
+        return
     endif
+    " Add highlight.
+    let self.__ids.search
+    \   = matchadd('GraVitSearch', a:search_buf.get_buffer())
+    let self.__ids.current_match
+    \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
 endfunction
 
 " }}}
@@ -176,14 +172,14 @@ endfunction
 function! s:SearchBuffer_rotate_index() dict
     let self.__index =
     \   (self.__index + 1)
-    \   % len(s:match_as_possible(
+    \   % len(s:match_pos_list(
     \       join(s:get_visible_lines(), "\n"),
     \       self.__buffer))
     let self.__changed = 1
 endfunction
 
 function! s:SearchBuffer_search() dict
-    return s:search_pos(self.__buffer, self.__index)
+    return get(s:search_pos_list(self.__buffer), self.__index, [])
 endfunction
 
 function! s:SearchBuffer_has_changed() dict
@@ -206,33 +202,33 @@ function! s:setup_highlight()
     endif
 endfunction
 
-function! s:search_pos(search_buf, skip_num)
-    let skip_num = a:skip_num
-    " Get lnums of matched lines.
+" Return value: [[lnum, col, len], ...]
+function! s:search_pos_list(search_buf)
+    let result = []
     for lnum in filter(s:get_visible_lnums(), 'getline(v:val) =~# a:search_buf')
-        " Get the col at where a:search_buf matched.
-        let idx = 0
-        let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx)
-        while skip_num isnot 0 && idx isnot -1
-            let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx + 1)
-            let skip_num -= 1
-        endwhile
-        if skip_num is 0
-            return [lnum, idx + 1, len]
-        endif
+        for pos in s:match_pos_list(
+        \               s:get_visible_line(lnum), a:search_buf)
+            call add(result, [lnum] + pos)
+        endfor
     endfor
-    return []
+    return result
 endfunction
 
-function! s:match_as_possible(expr, pat)
-    let result = []
-    let start = 0
-    while start isnot -1
-        let start = match(a:expr, a:pat, start is 0 ? 0 : start + 1)
+" Return value: [col, len]
+function! s:match_pos_list(expr, pat)
+    let [start, len] = s:match_with_len(a:expr, a:pat, 0)
+    if start is -1
+        return []
+    endif
+    " Add [col, len]
+    let result = [[start + 1, len]]
+    while 1
+        let [start, len] = s:match_with_len(a:expr, a:pat, start + 1)
         if start is -1
             break
         endif
-        call add(result, start)
+        " Add [col, len]
+        call add(result, [start + 1, len])
     endwhile
     return result
 endfunction
@@ -261,7 +257,7 @@ endfunction
 
 function! s:match_with_len(...)
     let start = call('match', a:000)
-    return [start, call('matchend', a:000) - start]
+    return [start, start isnot -1 ? call('matchend', a:000) - start : -1]
 endfunction
 
 function! s:getchar()
