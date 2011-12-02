@@ -37,6 +37,8 @@ set cpo&vim
 
 
 
+let g:ravit_prompt = get(g:, 'ravit_prompt', '⚡ ')
+
 nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
 
 
@@ -48,7 +50,7 @@ function! s:gravit_run()
     while 1
         " Echo prompt.
         redraw
-        echo "\r⚡ " . search_buf
+        echo "\r" . g:ravit_prompt . search_buf
         " Remove previous highlight.
         for _ in keys(ids)
             if ids[_] >=# 0
