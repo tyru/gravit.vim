@@ -11,7 +11,7 @@ function! gravit#load()
     " dummy function to load this script.
 endfunction
 
-function! gravit#run()
+function! gravit#run(mode)
     let  hl_manager = s:HighlightManager_new()
     call hl_manager.setup()
     let  buffer = s:SearchBuffer_new()
@@ -31,7 +31,19 @@ function! gravit#run()
                 " Jump to the position.
                 let pos = buffer.search()
                 if !empty(pos)
-                    call cursor(pos[0], pos[1])
+                    if a:mode ==# 'v'
+                        let dx = pos[1] - col('.')
+                        let dy = pos[0] - line('.')
+                        return
+                        \   (dx isnot 0 ?
+                        \       abs(dx) . (dx <# 0 ? 'h' : 'l') :
+                        \       '') .
+                        \   (dy isnot 0 ?
+                        \       abs(dy) . (dy <# 0 ? 'k' : 'j') :
+                        \       '')
+                    else
+                        call cursor(pos[0], pos[1])
+                    endif
                 else
                     redraw
                     echohl WarningMsg

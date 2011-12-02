@@ -41,7 +41,9 @@ set cpo&vim
 let g:ravit_prompt = get(g:, 'ravit_prompt', '⚡ ')
 
 " Keymappings
-nnoremap <Plug>gravit->run :<C-u>call gravit#run()<CR>
+nnoremap        <Plug>gravit->run :<C-u>call gravit#run('n')<CR>
+onoremap        <Plug>gravit->run :<C-u>call gravit#run('o')<CR>
+vnoremap <expr> <Plug>gravit->run gravit#run('v')
 
 
 
