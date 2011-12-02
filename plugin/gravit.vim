@@ -114,7 +114,7 @@ function! s:search_pos(search_buf, skip_num)
     " Get lnums of matched lines.
     for lnum in filter(
     \   range(line('w0'), line('w$')),
-    \   'getline(v:val) =~# a:search_buf'
+    \   's:get_visible_line(v:val) =~# a:search_buf'
     \)
         " Get the col at where a:search_buf matched.
         let idx = 0
@@ -157,6 +157,12 @@ function! s:get_visible_lines()
         endif
     endwhile
     return lines
+endfunction
+
+function! s:get_visible_line(lnum)
+    return foldclosed(a:lnum) isnot -1 ?
+    \           foldtextresult(a:lnum) :
+    \           getline(a:lnum)
 endfunction
 
 function! s:match_with_len(...)
