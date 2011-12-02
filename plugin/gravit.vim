@@ -45,21 +45,16 @@ nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
 function! s:gravit_run()
     call s:setup_highlight()
     let search_buf = ''
+    let old_search_buf = ''
     let ids = {'search': -1, 'current_match': -1}
     let match_index = 0
     while 1
         " Echo prompt.
         redraw
         echo "\r" . g:ravit_prompt . search_buf
-        " Remove previous highlight.
-        for _ in keys(ids)
-            if ids[_] >=# 0
-                call matchdelete(ids[_])
-                let ids[_] = -1
-            endif
-        endfor
 
         " Handle input char.
+        let old_search_buf = search_buf
         let c = s:getchar()
         if c ==# "\<Esc>"
             break
@@ -86,18 +81,29 @@ function! s:gravit_run()
         else
             let search_buf .= c
         endif
-        " Add highlight.
-        let pos = s:search_pos(search_buf, match_index)
-        if !empty(pos)
-            let ids.search
-            \   = matchadd('GraVitSearch', search_buf)
-            let ids.current_match
-            \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
-        else
-            redraw
-            echohl WarningMsg
-            echomsg 'No match: '.search_buf
-            echohl None
+
+        " Update highlight.
+        if search_buf !=# old_search_buf
+            " Remove previous highlight.
+            for _ in keys(ids)
+                if ids[_] >=# 0
+                    call matchdelete(ids[_])
+                    let ids[_] = -1
+                endif
+            endfor
+            " Add highlight.
+            let pos = s:search_pos(search_buf, match_index)
+            if !empty(pos)
+                let ids.search
+                \   = matchadd('GraVitSearch', search_buf)
+                let ids.current_match
+                \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
+            else
+                redraw
+                echohl WarningMsg
+                echomsg 'No match: '.search_buf
+                echohl None
+            endif
         endif
     endwhile
 endfunction
