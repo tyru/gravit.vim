@@ -83,11 +83,8 @@ function! s:gravit_run()
         if !empty(pos)
             let ids.search
             \   = matchadd('GraVitSearch', search_buf)
-            " FIXME: `len(search_buf)` is not applicable
-            " because `search_buf` may match the words
-            " of different length.
             let ids.current_match
-            \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', len(search_buf)))
+            \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
         else
             redraw
             echohl WarningMsg
@@ -117,16 +114,21 @@ function! s:search_pos(search_buf, skip_num)
     \)
         " Get the col at where a:search_buf matched.
         let idx = 0
-        let idx = match(getline(lnum), a:search_buf, idx)
+        let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx)
         while skip_num isnot 0 && idx isnot -1
-            let idx = match(getline(lnum), a:search_buf, idx + 1)
+            let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx + 1)
             let skip_num -= 1
         endwhile
         if skip_num is 0
-            return [lnum, idx + 1]
+            return [lnum, idx + 1, len]
         endif
     endfor
     return []
+endfunction
+
+function! s:match_with_len(...)
+    let start = call('match', a:000)
+    return [start, call('matchend', a:000) - start]
 endfunction
 
 function! s:getchar()
