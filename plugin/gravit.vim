@@ -62,7 +62,7 @@ function! s:gravit_run()
             let match_index =
             \   (match_index + 1)
             \   % len(s:match_as_possible(
-            \       join(s:get_visible_lines(), "\n"),
+            \       join(s:get_visible_lnums(), "\n"),
             \       search_buf))
         elseif c ==# "\<Return>"
             " Jump to the position.
@@ -146,10 +146,7 @@ endfunction
 function! s:search_pos(search_buf, skip_num)
     let skip_num = a:skip_num
     " Get lnums of matched lines.
-    for lnum in filter(
-    \   range(line('w0'), line('w$')),
-    \   's:get_visible_line(v:val) =~# a:search_buf'
-    \)
+    for lnum in s:get_visible_lnums()
         " Get the col at where a:search_buf matched.
         let idx = 0
         let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx)
@@ -178,25 +175,25 @@ function! s:match_as_possible(expr, pat)
 endfunction
 
 function! s:get_visible_lines()
-    let lnum = line('w0')
-    let lines = []
-    while lnum <=# line('w$')
-        if foldclosed(lnum) isnot -1
-            " Folding is closed.
-            call add(lines, foldtextresult(lnum))
-            let lnum  = foldclosedend(lnum) + 1
-        else
-            call add(lines, getline(lnum))
-            let lnum += 1
-        endif
-    endwhile
-    return lines
+    return map(s:get_visible_lnums(), 's:get_visible_line(v:val)')
 endfunction
 
 function! s:get_visible_line(lnum)
     return foldclosed(a:lnum) isnot -1 ?
     \           foldtextresult(a:lnum) :
     \           getline(a:lnum)
+endfunction
+
+function! s:get_visible_lnums()
+    let lnum   = line('w0')
+    let result = []
+    while lnum <=# line('w$')
+        call add(result, lnum)
+        let lnum =
+        \   foldclosed(lnum) isnot -1 ?
+        \       foldclosedend(lnum) + 1 : lnum + 1
+    endwhile
+    return result
 endfunction
 
 function! s:match_with_len(...)
