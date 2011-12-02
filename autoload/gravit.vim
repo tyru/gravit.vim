@@ -65,7 +65,7 @@ function! gravit#run(mode)
 
         endwhile
     finally
-        call hl_manager.unregister()
+        call hl_manager.stop_highlight()
     endtry
 endfunction
 
@@ -77,8 +77,8 @@ function! s:HighlightManager_new()
     \   '__ids': {'search': -1, 'current_match': -1},
     \   'setup': function('s:HighlightManager_setup'),
     \   'update': function('s:HighlightManager_update'),
-    \   'unregister': function('s:HighlightManager_unregister'),
-    \   'register': function('s:HighlightManager_register'),
+    \   'stop_highlight': function('s:HighlightManager_stop_highlight'),
+    \   'start_highlight': function('s:HighlightManager_start_highlight'),
     \}
 endfunction
 
@@ -92,11 +92,11 @@ function! s:HighlightManager_setup() dict
 endfunction
 
 function! s:HighlightManager_update(search_buf) dict
-    call self.unregister()
-    call self.register(a:search_buf)
+    call self.stop_highlight()
+    call self.start_highlight(a:search_buf)
 endfunction
 
-function! s:HighlightManager_unregister() dict
+function! s:HighlightManager_stop_highlight() dict
     " Remove previous highlight.
     let ids = self.__ids
     for _ in keys(ids)
@@ -107,7 +107,7 @@ function! s:HighlightManager_unregister() dict
     endfor
 endfunction
 
-function! s:HighlightManager_register(search_buf) dict
+function! s:HighlightManager_start_highlight(search_buf) dict
     let pos = a:search_buf.search()
     if empty(pos)
         return
