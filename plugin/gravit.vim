@@ -37,8 +37,8 @@ set cpo&vim
 
 
 
-nmap f <Plug>gravit->run
 nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
+
 
 function! s:gravit_run()
     call s:setup_highlight()
