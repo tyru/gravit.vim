@@ -24,7 +24,7 @@ function! gravit#run(mode)
             " Handle input char.
             let c = s:getchar()
             if c ==# "\<Esc>"
-                break
+                return
             elseif c ==# "\<Tab>"
                 call buffer.rotate_index()
             elseif c ==# "\<Return>"
@@ -50,7 +50,7 @@ function! gravit#run(mode)
                     echomsg 'No match: '.buffer.get_buffer()
                     echohl None
                 endif
-                break
+                return
             elseif c ==# "\<BS>" || c ==# "\<C-h>"
                 call buffer.pop_buffer()
             else
