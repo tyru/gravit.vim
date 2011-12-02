@@ -44,49 +44,44 @@ nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
 
 function! s:gravit_run()
     call s:setup_highlight()
-    let search_buf = ''
-    let old_search_buf = ''
     let hl_manager = s:HighlightManager_new()
-    let match_index = 0
+    let buffer = s:SearchBuffer_new()
     try
         while 1
             " Echo prompt.
             redraw
-            echo "\r" . g:ravit_prompt . search_buf
+            echo "\r" . g:ravit_prompt . buffer.get_buffer()
 
             " Handle input char.
-            let old_search_buf = search_buf
             let c = s:getchar()
             if c ==# "\<Esc>"
                 break
             elseif c ==# "\<Tab>"
-                let match_index =
-                \   (match_index + 1)
-                \   % len(s:match_as_possible(
-                \       join(s:get_visible_lnums(), "\n"),
-                \       search_buf))
+                call buffer.rotate_index()
             elseif c ==# "\<Return>"
                 " Jump to the position.
-                let pos = s:search_pos(search_buf, match_index)
+                let pos = buffer.search()
                 if !empty(pos)
                     call cursor(pos[0], pos[1])
                 else
                     redraw
                     echohl WarningMsg
-                    echomsg 'No match: '.search_buf
+                    echomsg 'No match: '.buffer.get_buffer()
                     echohl None
                 endif
                 break
             elseif c ==# "\<BS>" || c ==# "\<C-h>"
-                let search_buf = search_buf[:-2]
+                call buffer.pop_buffer()
             else
-                let search_buf .= c
+                call buffer.push_buffer(c)
             endif
 
             " Update highlight.
-            if search_buf !=# old_search_buf
-                call hl_manager.update(search_buf, match_index)
+            if buffer.has_changed()
+                call hl_manager.update(buffer.get_buffer(), buffer.get_index())
             endif
+            call buffer.commit()
+
         endwhile
     finally
         call hl_manager.unregister()
@@ -135,6 +130,70 @@ function! s:HighlightManager_register(search_buf, match_index) dict
         echohl None
     endif
 endfunction
+
+" }}}
+
+" SearchBuffer {{{
+
+function! s:SearchBuffer_new()
+    return {
+    \   '__buffer': '',
+    \   '__index': 0,
+    \   '__changed': 0,
+    \
+    \   'get_buffer': function('s:SearchBuffer_get_buffer'),
+    \   'pop_buffer': function('s:SearchBuffer_pop_buffer'),
+    \   'push_buffer': function('s:SearchBuffer_push_buffer'),
+    \
+    \   'get_index': function('s:SearchBuffer_get_index'),
+    \   'rotate_index': function('s:SearchBuffer_rotate_index'),
+    \
+    \   'search': function('s:SearchBuffer_search'),
+    \
+    \   'has_changed': function('s:SearchBuffer_has_changed'),
+    \   'commit': function('s:SearchBuffer_commit'),
+    \}
+endfunction
+
+function! s:SearchBuffer_get_buffer() dict
+    return self.__buffer
+endfunction
+
+function! s:SearchBuffer_pop_buffer() dict
+    let self.__buffer = self.__buffer[:-2]
+    let self.__changed = 1
+endfunction
+
+function! s:SearchBuffer_push_buffer(c) dict
+    let self.__buffer .= a:c
+    let self.__changed = 1
+endfunction
+
+function! s:SearchBuffer_get_index() dict
+    return self.__index
+endfunction
+
+function! s:SearchBuffer_rotate_index() dict
+    let self.__index =
+    \   (self.__index + 1)
+    \   % len(s:match_as_possible(
+    \       join(s:get_visible_lines(), "\n"),
+    \       self.__buffer))
+    let self.__changed = 1
+endfunction
+
+function! s:SearchBuffer_search() dict
+    return s:search_pos(self.__buffer, self.__index)
+endfunction
+
+function! s:SearchBuffer_has_changed() dict
+    return self.__changed
+endfunction
+
+function! s:SearchBuffer_commit() dict
+    let self.__changed = 0
+endfunction
+
 
 " }}}
 
