@@ -122,10 +122,10 @@ function! s:HighlightManager_start_highlight(search_buf) dict
         return
     endif
     " Add highlight.
-    let self.__ids.search
-    \   = matchadd('GraVitSearch', a:search_buf.get_buffer())
-    let self.__ids.current_match
-    \   = matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
+    let self.__ids.search =
+    \   matchadd('GraVitSearch', a:search_buf.get_buffer())
+    let self.__ids.current_match =
+    \   matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
     let self.__highlighted = 1
 endfunction
 
