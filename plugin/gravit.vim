@@ -43,9 +43,9 @@ nnoremap <Plug>gravit->run :<C-u>call <SID>gravit_run()<CR>
 
 
 function! s:gravit_run()
-    call s:setup_highlight()
-    let hl_manager = s:HighlightManager_new()
-    let buffer = s:SearchBuffer_new()
+    let  hl_manager = s:HighlightManager_new()
+    call hl_manager.setup()
+    let  buffer = s:SearchBuffer_new()
     try
         while 1
             " Echo prompt.
@@ -93,10 +93,20 @@ endfunction
 function! s:HighlightManager_new()
     return {
     \   '__ids': {'search': -1, 'current_match': -1},
+    \   'setup': function('s:HighlightManager_setup'),
     \   'update': function('s:HighlightManager_update'),
     \   'unregister': function('s:HighlightManager_unregister'),
     \   'register': function('s:HighlightManager_register'),
     \}
+endfunction
+
+function! s:HighlightManager_setup() dict
+    if !hlexists('GraVitSearch')
+        highlight GraVitSearch term=underline cterm=underline gui=underline ctermfg=4 guifg=Cyan
+    endif
+    if !hlexists('GraVitCurrentMatch')
+        highlight GraVitCurrentMatch term=underline cterm=underline gui=underline ctermfg=4 guifg=Red
+    endif
 endfunction
 
 function! s:HighlightManager_update(search_buf) dict
@@ -195,15 +205,6 @@ endfunction
 
 
 " }}}
-
-function! s:setup_highlight()
-    if !hlexists('GraVitSearch')
-        highlight GraVitSearch term=underline cterm=underline gui=underline ctermfg=4 guifg=Cyan
-    endif
-    if !hlexists('GraVitCurrentMatch')
-        highlight GraVitCurrentMatch term=underline cterm=underline gui=underline ctermfg=4 guifg=Red
-    endif
-endfunction
 
 " Return value: [[lnum, col, len], ...]
 function! s:search_pos_list(search_buf)
