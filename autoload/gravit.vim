@@ -126,7 +126,9 @@ function! s:HighlightManager_start_highlight(search_buf) dict
     let self.__ids.search =
     \   matchadd('GraVitSearch', a:search_buf.get_buffer())
     let self.__ids.current_match =
-    \   matchadd('GraVitCurrentMatch', '\%'.pos[0].'l'.'\%'.pos[1].'v'.repeat('.', pos[2]))
+    \   matchadd('GraVitCurrentMatch',
+    \            '\%'.pos[0].'l' . '\%'.pos[1].'v'
+    \           . a:search_buf.make_pattern())
     let self.__highlighted = 1
 endfunction
 
@@ -148,6 +150,7 @@ function! s:SearchBuffer_new()
     \   'rotate_index': function('s:SearchBuffer_rotate_index'),
     \
     \   'search': function('s:SearchBuffer_search'),
+    \   'make_pattern': function('s:SearchBuffer_make_pattern'),
     \
     \   'has_changed': function('s:SearchBuffer_has_changed'),
     \   'commit': function('s:SearchBuffer_commit'),
@@ -185,7 +188,16 @@ function! s:SearchBuffer_rotate_index() dict
 endfunction
 
 function! s:SearchBuffer_search() dict
-    return get(s:search_pos_list(self.__buffer), self.__index, [])
+    return get(s:search_pos_list(self.make_pattern()), self.__index, [])
+endfunction
+
+function! s:SearchBuffer_make_pattern() dict
+    let ic =
+    \   &ignorecase
+    \   && !(&smartcase && self.__buffer =~# '[A-Z]')
+    return
+    \   self.__buffer
+    \   . (ic ? '\c' : '\C')
 endfunction
 
 function! s:SearchBuffer_has_changed() dict
