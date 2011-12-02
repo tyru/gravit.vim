@@ -170,12 +170,15 @@ function! s:SearchBuffer_get_index() dict
 endfunction
 
 function! s:SearchBuffer_rotate_index() dict
+    let old = self.__index
     let self.__index =
     \   (self.__index + 1)
     \   % len(s:match_pos_list(
     \       join(s:get_visible_lines(), "\n"),
     \       self.__buffer))
-    let self.__changed = 1
+    if self.__index isnot old
+        let self.__changed = 1
+    endif
 endfunction
 
 function! s:SearchBuffer_search() dict
