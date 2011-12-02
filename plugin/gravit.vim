@@ -209,7 +209,7 @@ endfunction
 function! s:search_pos(search_buf, skip_num)
     let skip_num = a:skip_num
     " Get lnums of matched lines.
-    for lnum in s:get_visible_lnums()
+    for lnum in filter(s:get_visible_lnums(), 'getline(v:val) =~# a:search_buf')
         " Get the col at where a:search_buf matched.
         let idx = 0
         let [idx, len] = s:match_with_len(getline(lnum), a:search_buf, idx)
