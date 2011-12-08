@@ -1,29 +1,6 @@
 " vim:foldmethod=marker:fen:
 scriptencoding utf-8
 
-" Change Log: {{{
-" }}}
-" Document {{{
-"
-" Name: 
-" Version: 0.0.0
-" Author:  tyru <tyru.exe@gmail.com>
-" Last Change: 2011-12-08.
-" License: Distributable under the same terms as Vim itself (see :help license)
-"
-" Description:
-"   NO DESCRIPTION YET
-"
-" Usage: {{{
-"   Commands: {{{
-"   }}}
-"   Mappings: {{{
-"   }}}
-"   Global Variables: {{{
-"   }}}
-" }}}
-" }}}
-
 " Load Once {{{
 if (exists('g:loaded_') && g:loaded_) || &cp
     finish
