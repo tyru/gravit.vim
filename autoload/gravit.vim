@@ -214,19 +214,17 @@ endfunction
 
 " Return value: [col, len]
 function! s:match_pos_list(expr, pat)
-    let [start, len] = s:match_with_len(a:expr, a:pat, 0)
-    if start is -1
-        return []
-    endif
-    " Add [col, len]
-    let result = [[start + 1, len]]
+    let result = []
+    let start = 0
     while 1
-        let [start, len] = s:match_with_len(a:expr, a:pat, start + 1)
+        let [start, len] = s:match_with_len(a:expr, a:pat, start)
         if start is -1
             break
         endif
         " Add [col, len]
         call add(result, [start + 1, len])
+        " Search next match.
+        let start += 1
     endwhile
     return result
 endfunction
