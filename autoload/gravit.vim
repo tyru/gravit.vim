@@ -75,7 +75,6 @@ endfunction
 
 function! s:HighlightManager_new()
     return {
-    \   '__ids': {'search': -1, 'current_match': -1},
     \   '__highlighted': 0,
     \
     \   'update': function('s:HighlightManager_update'),
@@ -94,11 +93,10 @@ function! s:HighlightManager_stop_highlight() dict
         return
     endif
     " Remove previous highlight.
-    let ids = self.__ids
-    for _ in keys(ids)
-        if ids[_] >=# 0
-            call matchdelete(ids[_])
-            let ids[_] = -1
+    for _ in getmatches()
+        if _.group ==# 'GraVitSearch'
+        \   || _.group ==# 'GraVitCurrentMatch'
+            call matchdelete(_.id)
         endif
     endfor
     let self.__highlighted = 0
@@ -113,12 +111,10 @@ function! s:HighlightManager_start_highlight(search_buf) dict
         return
     endif
     " Add highlight.
-    let self.__ids.search =
-    \   matchadd('GraVitSearch', a:search_buf.get_buffer())
-    let self.__ids.current_match =
-    \   matchadd('GraVitCurrentMatch',
-    \            '\%'.pos[0].'l' . '\%'.pos[1].'v'
-    \           . a:search_buf.make_pattern())
+    call matchadd('GraVitSearch', a:search_buf.get_buffer())
+    call matchadd('GraVitCurrentMatch',
+    \             '\%'.pos[0].'l' . '\%'.pos[1].'v'
+    \             . a:search_buf.make_pattern())
     let self.__highlighted = 1
 endfunction
 
