@@ -166,20 +166,23 @@ function! s:SearchBuffer_rotate_index() dict
     let old = self.__index
     let self.__index =
     \   (self.__index + 1)
-    \   % len(s:match_pos_list(
-    \       join(s:get_visible_lines(), "\n"),
-    \       self.__buffer))
+    \   % len(s:win_search_pos_list(self.make_pattern()))
     if self.__index isnot old
         let self.__changed = 1
     endif
 endfunction
 
 function! s:SearchBuffer_adjust_index(forward) dict
-    let curpos = {'lnum': line('.'), 'col': virtcol('.')}
-    let pos_list = s:search_pos_list(self.make_pattern())
+    let curpos = {
+    \   'lnum': line('.'),
+    \   'col': virtcol('.'),
+    \   'winnr': winnr(),
+    \}
+    let pos_list = s:win_search_pos_list(self.make_pattern())
     let index = 0
     for index in range(len(pos_list))
-        if curpos.lnum <# pos_list[index].lnum
+        if curpos.winnr <# pos_list[index].winnr
+        \   || curpos.lnum <# pos_list[index].lnum
         \   || curpos.lnum is pos_list[index].lnum
         \   && curpos.col <# pos_list[index].col
             " Overtake current position.
@@ -202,7 +205,7 @@ function! s:SearchBuffer_adjust_index(forward) dict
 endfunction
 
 function! s:SearchBuffer_get_position() dict
-    return get(s:search_pos_list(self.make_pattern()), self.__index, [])
+    return get(s:win_search_pos_list(self.make_pattern()), self.__index, [])
 endfunction
 
 function! s:SearchBuffer_make_pattern() dict
@@ -224,6 +227,16 @@ endfunction
 
 
 " }}}
+
+" Return value: [{winnr: ..., lnum: ..., col: ..., len: ...}, ...]
+" Positions are sorted by left to right, up to down.
+function! s:win_search_pos_list(search_buf)
+    let _ = []
+    windo let _ +=
+    \   map(s:search_pos_list(a:search_buf),
+    \       'extend(v:val, {"winnr": winnr()}, "error")')
+    return _
+endfunction
 
 " Return value: [{lnum: ..., col: ..., len: ...}, ...]
 " Positions are sorted by left to right, up to down.
@@ -256,10 +269,6 @@ function! s:match_pos_list(expr, pat)
         let start += 1
     endwhile
     return result
-endfunction
-
-function! s:get_visible_lines()
-    return map(s:get_visible_lnums(), 's:get_visible_line(v:val)')
 endfunction
 
 function! s:get_visible_line(lnum)
