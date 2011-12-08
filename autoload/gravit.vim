@@ -95,13 +95,17 @@ function! s:HighlightManager_stop_highlight() dict
         return
     endif
     " Remove previous highlight.
+    windo call s:HighlightManager_remove_highlight()
+    let self.__highlighted = 0
+endfunction
+
+function! s:HighlightManager_remove_highlight()
     for _ in getmatches()
         if _.group ==# 'GraVitSearch'
         \   || _.group ==# 'GraVitCurrentMatch'
             call matchdelete(_.id)
         endif
     endfor
-    let self.__highlighted = 0
 endfunction
 
 function! s:HighlightManager_start_highlight(search_buf) dict
@@ -113,11 +117,18 @@ function! s:HighlightManager_start_highlight(search_buf) dict
         return
     endif
     " Add highlight.
-    call matchadd('GraVitSearch', a:search_buf.get_buffer())
-    call matchadd('GraVitCurrentMatch',
-    \             '\%' . pos.lnum . 'l' . '\%' . pos.col . 'v'
-    \             . a:search_buf.make_pattern())
+    windo call s:HighlightManager_add_highlight(a:search_buf, pos)
     let self.__highlighted = 1
+endfunction
+
+function! s:HighlightManager_add_highlight(search_buf, pos)
+    call matchadd('GraVitSearch', a:search_buf.get_buffer())
+    if winnr() is a:pos.winnr
+        call matchadd('GraVitCurrentMatch',
+        \               '\%' . a:pos.lnum . 'l'
+        \             . '\%' . a:pos.col . 'v'
+        \             . a:search_buf.make_pattern())
+    endif
 endfunction
 
 " }}}
