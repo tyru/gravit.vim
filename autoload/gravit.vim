@@ -12,8 +12,8 @@ function! gravit#load()
 endfunction
 
 function! gravit#run(mode, forward)
-    let  hl_manager = s:HighlightManager_new()
-    let  buffer = s:SearchBuffer_new()
+    let hl_manager = s:HighlightManager_new()
+    let buffer     = s:SearchBuffer_new()
     try
         while 1
             " Echo prompt.
@@ -64,7 +64,6 @@ function! gravit#run(mode, forward)
                 call hl_manager.update(buffer)
             endif
             call buffer.commit()
-
         endwhile
     finally
         call hl_manager.stop_highlight()
