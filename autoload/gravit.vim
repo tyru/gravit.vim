@@ -32,8 +32,8 @@ function! gravit#run(mode, forward)
                 let pos = buffer.get_position()
                 if !empty(pos)
                     if a:mode ==# 'v'
-                        let dx = pos[1] - col('.')
-                        let dy = pos[0] - line('.')
+                        let dx = pos.col - col('.')
+                        let dy = pos.lnum - line('.')
                         return
                         \   (dx isnot 0 ?
                         \       abs(dx) . (dx <# 0 ? 'h' : 'l') :
@@ -42,7 +42,7 @@ function! gravit#run(mode, forward)
                         \       abs(dy) . (dy <# 0 ? 'k' : 'j') :
                         \       '')
                     else
-                        call cursor(pos[0], pos[1])
+                        call cursor(pos.lnum, pos.col)
                     endif
                 else
                     redraw
@@ -113,7 +113,7 @@ function! s:HighlightManager_start_highlight(search_buf) dict
     " Add highlight.
     call matchadd('GraVitSearch', a:search_buf.get_buffer())
     call matchadd('GraVitCurrentMatch',
-    \             '\%'.pos[0].'l' . '\%'.pos[1].'v'
+    \             '\%' . pos.lnum . 'l' . '\%' . pos.col . 'v'
     \             . a:search_buf.make_pattern())
     let self.__highlighted = 1
 endfunction
@@ -175,13 +175,13 @@ function! s:SearchBuffer_rotate_index() dict
 endfunction
 
 function! s:SearchBuffer_adjust_index(forward) dict
-    let curpos = [line('.'), virtcol('.')]
+    let curpos = {'lnum': line('.'), 'col': virtcol('.')}
     let pos_list = s:search_pos_list(self.make_pattern())
     let index = 0
     for index in range(len(pos_list))
-        if curpos[0] <# pos_list[index][0]
-        \   || curpos[0] is pos_list[index][0]
-        \   && curpos[1] <# pos_list[index][1]
+        if curpos.lnum <# pos_list[index].lnum
+        \   || curpos.lnum is pos_list[index].lnum
+        \   && curpos.col <# pos_list[index].col
             " Overtake current position.
             " `pos_list[index]` must be the
             " right of current position.
@@ -192,8 +192,8 @@ function! s:SearchBuffer_adjust_index(forward) dict
         let self.__index = index
     else
         if index isnot 0
-        \   && curpos[0] is pos_list[index-1][0]
-        \   && curpos[1] is pos_list[index-1][1]
+        \   && curpos.lnum is pos_list[index-1].lnum
+        \   && curpos.col is pos_list[index-1].col
             let self.__index = index ># 1 ? index - 2 : 0
         else
             let self.__index = index ># 0 ? index - 1 : 0
@@ -225,7 +225,7 @@ endfunction
 
 " }}}
 
-" Return value: [[lnum, col, len], ...]
+" Return value: [{lnum: ..., col: ..., len: ...}, ...]
 " Positions are sorted by left to right, up to down.
 function! s:search_pos_list(search_buf)
     let result = []
@@ -235,13 +235,14 @@ function! s:search_pos_list(search_buf)
             continue
         endif
         for pos in s:match_pos_list(line, a:search_buf)
-            call add(result, [lnum] + pos)
+            let pos.lnum = lnum
+            call add(result, pos)
         endfor
     endfor
     return result
 endfunction
 
-" Return value: [col, len]
+" Return value: [{col: ..., len: ...}, ...]
 function! s:match_pos_list(expr, pat)
     let result = []
     let start = 0
@@ -250,8 +251,7 @@ function! s:match_pos_list(expr, pat)
         if start is -1
             break
         endif
-        " Add [col, len]
-        call add(result, [start + 1, len])
+        call add(result, {'col': start + 1, 'len': len})
         " Search next match.
         let start += 1
     endwhile
