@@ -2,10 +2,10 @@
 scriptencoding utf-8
 
 " Load Once {{{
-if (exists('g:loaded_') && g:loaded_) || &cp
+if (exists('g:loaded_gravit') && g:loaded_gravit) || &cp
     finish
 endif
-let g:loaded_ = 1
+let g:loaded_gravit = 1
 " }}}
 " Saving 'cpoptions' {{{
 let s:save_cpo = &cpo
