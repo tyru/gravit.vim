@@ -11,7 +11,7 @@ function! gravit#load()
     " dummy function to load this script.
 endfunction
 
-function! gravit#run(mode)
+function! gravit#run(mode, forward)
     let  hl_manager = s:HighlightManager_new()
     let  buffer = s:SearchBuffer_new()
     try
@@ -59,7 +59,7 @@ function! gravit#run(mode)
 
             if buffer.has_changed()
                 " Select match after current pos.
-                call buffer.adjust_index()
+                call buffer.adjust_index(a:forward)
                 " Update highlight.
                 call hl_manager.update(buffer)
             endif
@@ -179,7 +179,7 @@ function! s:SearchBuffer_rotate_index() dict
     endif
 endfunction
 
-function! s:SearchBuffer_adjust_index() dict
+function! s:SearchBuffer_adjust_index(forward) dict
     let curpos = [line('.'), virtcol('.')]
     let pos_list = s:search_pos_list(self.make_pattern())
     let index = 0
@@ -189,7 +189,17 @@ function! s:SearchBuffer_adjust_index() dict
             break
         endif
     endfor
-    let self.__index = index
+    if a:forward
+        let self.__index = index
+    else
+        if index isnot 0
+        \   && curpos[0] is pos_list[index-1][0]
+        \   && curpos[1] is pos_list[index-1][1]
+            let self.__index = index ># 1 ? index - 2 : 0
+        else
+            let self.__index = index ># 0 ? index - 1 : 0
+        endif
+    endif
 endfunction
 
 function! s:SearchBuffer_search() dict
