@@ -29,7 +29,7 @@ function! gravit#run(mode, forward)
                 call buffer.rotate_index()
             elseif c ==# "\<Return>"
                 " Jump to the position.
-                let pos = buffer.search()
+                let pos = buffer.get_position()
                 if !empty(pos)
                     if a:mode ==# 'v'
                         let dx = pos[1] - col('.')
@@ -106,7 +106,7 @@ function! s:HighlightManager_start_highlight(search_buf) dict
     if self.__highlighted
         return
     endif
-    let pos = a:search_buf.search()
+    let pos = a:search_buf.get_position()
     if empty(pos)
         return
     endif
@@ -136,7 +136,7 @@ function! s:SearchBuffer_new()
     \   'rotate_index': function('s:SearchBuffer_rotate_index'),
     \   'adjust_index': function('s:SearchBuffer_adjust_index'),
     \
-    \   'search': function('s:SearchBuffer_search'),
+    \   'get_position': function('s:SearchBuffer_get_position'),
     \   'make_pattern': function('s:SearchBuffer_make_pattern'),
     \
     \   'has_changed': function('s:SearchBuffer_has_changed'),
@@ -201,7 +201,7 @@ function! s:SearchBuffer_adjust_index(forward) dict
     endif
 endfunction
 
-function! s:SearchBuffer_search() dict
+function! s:SearchBuffer_get_position() dict
     return get(s:search_pos_list(self.make_pattern()), self.__index, [])
 endfunction
 
