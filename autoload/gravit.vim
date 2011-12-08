@@ -229,9 +229,12 @@ endfunction
 " Positions are sorted by left to right, up to down.
 function! s:search_pos_list(search_buf)
     let result = []
-    for lnum in filter(s:get_visible_lnums(), 'getline(v:val) =~# a:search_buf')
-        for pos in s:match_pos_list(
-        \               s:get_visible_line(lnum), a:search_buf)
+    for lnum in s:get_visible_lnums()
+        let line = s:get_visible_line(lnum)
+        if line !~# a:search_buf
+            continue
+        endif
+        for pos in s:match_pos_list(line, a:search_buf)
             call add(result, [lnum] + pos)
         endfor
     endfor
