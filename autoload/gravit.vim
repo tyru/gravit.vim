@@ -182,6 +182,9 @@ function! s:SearchBuffer_adjust_index(forward) dict
         if curpos[0] <# pos_list[index][0]
         \   || curpos[0] is pos_list[index][0]
         \   && curpos[1] <# pos_list[index][1]
+            " Overtake current position.
+            " `pos_list[index]` must be the
+            " right of current position.
             break
         endif
     endfor
