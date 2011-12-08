@@ -12,6 +12,11 @@ function! gravit#load()
 endfunction
 
 function! gravit#run(mode, forward)
+    let dest_pos   = {
+    \   'winnr': winnr(),
+    \   'lnum': line('.'),
+    \   'col': virtcol('.'),
+    \}
     let hl_manager = s:HighlightManager_new()
     let buffer     = s:SearchBuffer_new()
     try
@@ -32,6 +37,9 @@ function! gravit#run(mode, forward)
                 let pos = buffer.get_position()
                 if !empty(pos)
                     if a:mode ==# 'v'
+                        if winnr() isnot pos.winnr
+                            return ''
+                        endif
                         let dx = pos.col - col('.')
                         let dy = pos.lnum - line('.')
                         return
@@ -42,7 +50,9 @@ function! gravit#run(mode, forward)
                         \       abs(dy) . (dy <# 0 ? 'k' : 'j') :
                         \       '')
                     else
-                        call cursor(pos.lnum, pos.col)
+                        let dest_pos.winnr = pos.winnr
+                        let dest_pos.lnum  = pos.lnum
+                        let dest_pos.col   = pos.col
                     endif
                 else
                     redraw
@@ -69,6 +79,10 @@ function! gravit#run(mode, forward)
         endwhile
     finally
         call hl_manager.stop_highlight()
+        " Move to destination.
+        " XXX: Also work on visual-mode?
+        execute dest_pos.winnr 'wincmd w'
+        call cursor(dest_pos.lnum, dest_pos.col)
     endtry
 endfunction
 
