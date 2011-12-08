@@ -59,7 +59,9 @@ function! gravit#run(mode, forward)
 
             if buffer.has_changed()
                 " Select match after current pos.
-                call buffer.adjust_index(a:forward)
+                if c !=# "\<Tab>"
+                    call buffer.adjust_index(a:forward)
+                endif
                 " Update highlight.
                 call hl_manager.update(buffer)
             endif
