@@ -8,7 +8,7 @@ scriptencoding utf-8
 " Name: 
 " Version: 0.0.0
 " Author:  tyru <tyru.exe@gmail.com>
-" Last Change: 2011-12-03.
+" Last Change: 2011-12-08.
 " License: Distributable under the same terms as Vim itself (see :help license)
 "
 " Description:
@@ -44,6 +44,10 @@ let g:ravit_prompt = get(g:, 'ravit_prompt', '⚡ ')
 nnoremap        <Plug>gravit->run :<C-u>call gravit#run('n')<CR>
 onoremap        <Plug>gravit->run :<C-u>call gravit#run('o')<CR>
 vnoremap <expr> <Plug>gravit->run gravit#run('v')
+
+" Highlights
+highlight! link GraVitSearch Search
+highlight! link GraVitCurrentMatch Visual
 
 
 

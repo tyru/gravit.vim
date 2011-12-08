@@ -13,7 +13,6 @@ endfunction
 
 function! gravit#run(mode)
     let  hl_manager = s:HighlightManager_new()
-    call hl_manager.setup()
     let  buffer = s:SearchBuffer_new()
     try
         while 1
@@ -78,20 +77,10 @@ function! s:HighlightManager_new()
     \   '__ids': {'search': -1, 'current_match': -1},
     \   '__highlighted': 0,
     \
-    \   'setup': function('s:HighlightManager_setup'),
     \   'update': function('s:HighlightManager_update'),
     \   'stop_highlight': function('s:HighlightManager_stop_highlight'),
     \   'start_highlight': function('s:HighlightManager_start_highlight'),
     \}
-endfunction
-
-function! s:HighlightManager_setup() dict
-    if !hlexists('GraVitSearch')
-        highlight GraVitSearch term=underline cterm=underline gui=underline ctermfg=4 guifg=Cyan
-    endif
-    if !hlexists('GraVitCurrentMatch')
-        highlight GraVitCurrentMatch term=underline cterm=underline gui=underline ctermfg=4 guifg=Red
-    endif
 endfunction
 
 function! s:HighlightManager_update(search_buf) dict
