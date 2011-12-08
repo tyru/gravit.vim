@@ -57,8 +57,10 @@ function! gravit#run(mode)
                 call buffer.push_buffer(c)
             endif
 
-            " Update highlight.
             if buffer.has_changed()
+                " Select match after current pos.
+                call buffer.adjust_index()
+                " Update highlight.
                 call hl_manager.update(buffer)
             endif
             call buffer.commit()
@@ -137,6 +139,7 @@ function! s:SearchBuffer_new()
     \
     \   'get_index': function('s:SearchBuffer_get_index'),
     \   'rotate_index': function('s:SearchBuffer_rotate_index'),
+    \   'adjust_index': function('s:SearchBuffer_adjust_index'),
     \
     \   'search': function('s:SearchBuffer_search'),
     \   'make_pattern': function('s:SearchBuffer_make_pattern'),
@@ -176,6 +179,19 @@ function! s:SearchBuffer_rotate_index() dict
     endif
 endfunction
 
+function! s:SearchBuffer_adjust_index() dict
+    let curpos = [line('.'), virtcol('.')]
+    let pos_list = s:search_pos_list(self.make_pattern())
+    let index = 0
+    for index in range(len(pos_list))
+        if curpos[0] <= pos_list[index][0]
+        \   && curpos[1] < pos_list[index][1]
+            break
+        endif
+    endfor
+    let self.__index = index
+endfunction
+
 function! s:SearchBuffer_search() dict
     return get(s:search_pos_list(self.make_pattern()), self.__index, [])
 endfunction
@@ -201,6 +217,7 @@ endfunction
 " }}}
 
 " Return value: [[lnum, col, len], ...]
+" Positions are sorted by left to right, up to down.
 function! s:search_pos_list(search_buf)
     let result = []
     for lnum in filter(s:get_visible_lnums(), 'getline(v:val) =~# a:search_buf')
