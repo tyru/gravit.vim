@@ -183,8 +183,9 @@ function! s:SearchBuffer_adjust_index(forward) dict
     let pos_list = s:search_pos_list(self.make_pattern())
     let index = 0
     for index in range(len(pos_list))
-        if curpos[0] <= pos_list[index][0]
-        \   && curpos[1] < pos_list[index][1]
+        if curpos[0] <# pos_list[index][0]
+        \   || curpos[0] is pos_list[index][0]
+        \   && curpos[1] <# pos_list[index][1]
             break
         endif
     endfor
