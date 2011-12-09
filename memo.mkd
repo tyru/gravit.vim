@@ -1,7 +1,5 @@
 * check if user highlight setting works
-* jump to another buffer
 * speed optimization?
-* consider about &ignorecase and &smartcase
 * manage input in buffer, not command-line
   *to make keys configurable.*
   * visible lines are changed when new buffer created
