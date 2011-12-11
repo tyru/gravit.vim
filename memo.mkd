@@ -4,7 +4,4 @@
   *to make keys configurable.*
   * visible lines are changed when new buffer created
 * support 'wrapscan', 'ignorecase', 'smartcase', ...
-
-これre-builder.elみたいに正規表現のテストにうってつけな気がする。
-マッチ専用のクラスを作ってVimの正規表現だけでなくいろいろな正規表現エンジンを切り替えたい (`if_*`使う？)
-(正規表現エンジンとして)migemoも使いたい
+* re-builder.elみたいに正規表現のテストにうってつけな気がする。
