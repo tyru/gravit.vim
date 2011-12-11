@@ -4,4 +4,4 @@
   *to make keys configurable.*
   * visible lines are changed when new buffer created
 * support 'wrapscan', 'ignorecase', 'smartcase', ...
-* re-builder.elみたいに正規表現のテストにうってつけな気がする。
+* this plugin is useful for testing regexp in Vim like re-builder.el?
