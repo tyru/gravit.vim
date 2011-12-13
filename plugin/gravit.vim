@@ -27,8 +27,8 @@ onoremap        <Plug>gravit->backward  :<C-u>call gravit#run('o', 0)<CR>
 vnoremap <expr> <Plug>gravit->backward  gravit#run('v', 0)
 
 " Highlights
-highlight! link GraVitSearch Search
-highlight! link GraVitCurrentMatch Visual
+highlight! default link GraVitSearch Search
+highlight! default link GraVitCurrentMatch Visual
 
 
 
